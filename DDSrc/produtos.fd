@@ -1,0 +1,6 @@
+#REPLACE FILE3 produtos
+#REPLACE produtos.File_Number |CI3
+#REPLACE produtos.codprod |FN3,1
+#REPLACE produtos.descricao |FS3,2
+#REPLACE produtos.data_inclusao |FM3,3
+#REPLACE produtos.data_alteracao |FM3,4

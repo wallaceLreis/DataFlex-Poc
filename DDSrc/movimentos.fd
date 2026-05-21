@@ -1,0 +1,8 @@
+#REPLACE FILE2 movimentos
+#REPLACE movimentos.File_Number |CI2
+#REPLACE movimentos.numunico |FN2,1
+#REPLACE movimentos.codlocal |FS2,2
+#REPLACE movimentos.quantanterior |FN2,3
+#REPLACE movimentos.quantatual |FN2,4
+#REPLACE movimentos.data_inclusao |FM2,5
+#REPLACE movimentos.data_alteracao |FM2,6

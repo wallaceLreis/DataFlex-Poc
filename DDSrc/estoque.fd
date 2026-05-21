@@ -1,0 +1,7 @@
+#REPLACE FILE1 estoque
+#REPLACE estoque.File_Number |CI1
+#REPLACE estoque.local |FS1,1
+#REPLACE estoque.codprod |FN1,2
+#REPLACE estoque.quantidade |FN1,3
+#REPLACE estoque.data_inclusao |FM1,4
+#REPLACE estoque.data_alteracao |FM1,5

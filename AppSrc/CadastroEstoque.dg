@@ -1,0 +1,123 @@
+// =============================================================================
+// CADASTRO DE ESTOQUE E MOVIMENTAÄ«O
+// Tela Modal para Inserá∆o Manual de Saldos e Hist¢rico (CadastroEstoque.dg)
+// =============================================================================
+
+// 1. Inclus∆o de Bibliotecas e Pacotes
+Use Windows.pkg
+Use DFClient.pkg
+Use DFEntry.pkg
+
+// 2. Estrutura Principal do Modal (ModalPanel)
+Object oCadastroEstoque is a ModalPanel
+    Set Label to "Cadastro de Estoque"
+    Set Location to 0 0
+    Set Size to 135 211
+    Set piMinSize to 135 211
+    Set Border_Style to Border_Thick
+
+    // 2.1. Elementos de Interface Visual (Campos de Entrada / Forms)
+    
+    // Campo de Inserá∆o Manual do C¢digo do Produto
+    Object oEstoqueCodProd is a Form
+        Set Label to "C¢d. Produto:"
+        Set Size to 13 60
+        Set Location to 15 80
+        Set Label_Col_Offset to 5
+        Set Label_Justification_mode to jMode_Right
+    End_Object
+
+    // Campo de Inserá∆o Manual da Quantidade
+    Object oEstoqueQuantidade is a Form
+        Set Label to "Quantidade:"
+        Set Size to 13 60
+        Set Location to 35 80
+        Set Label_Col_Offset to 5
+        Set Label_Justification_mode to jMode_Right
+    End_Object
+
+    // Campo de Inserá∆o Manual do Local do Estoque
+    Object oEstoqueLocal is a Form
+        Set Label to "Local:"
+        Set Size to 13 60
+        Set Location to 55 80
+        Set Label_Col_Offset to 5
+        Set Label_Justification_mode to jMode_Right
+    End_Object
+
+    // 2.2. Bot‰es de Interaá∆o e Persistància de Dados
+
+    // Bot∆o de Confirmaá∆o (Gravaá∆o)
+    Object oOK_Btn is a Button
+        Set Label to "&OK"
+        Set Location to 115 102
+        Set Size to 14 50
+        Set peAnchors to anBottomRight
+
+        // Rotina respons†vel pela gravaá∆o em cascata (Estoque -> Movimentos)
+        Procedure OnClick
+            String sCodProd sLocal
+            Integer iQuantidade
+            
+            // Coleta os valores digitados manualmente nos Forms
+            Get Value of oEstoqueCodProd to sCodProd
+            Get Value of oEstoqueQuantidade to iQuantidade
+            Get Value of oEstoqueLocal to sLocal
+            
+            // Validaá∆o simples se os campos principais foram preenchidos
+            If (sCodProd <> "" and sLocal <> "") Begin
+                
+                // -------------------------------------------------------------
+                // 1. Grava/Atualiza o registro na tabela Estoque
+                // -------------------------------------------------------------
+                Open Estoque
+                Clear estoque
+                
+                Move sLocal to estoque.local
+                Move sCodProd to estoque.codprod
+                Move iQuantidade to estoque.quantidade
+                Move (CurrentDateTime()) to estoque.data_alteracao
+                
+                SaveRecord estoque
+                
+                // -------------------------------------------------------------
+                // 2. Grava o hist¢rico na tabela Movimentos (Triggers/Logs)
+                // -------------------------------------------------------------
+                Open Movimentos
+                Clear movimentos
+                
+                Move sLocal to movimentos.codlocal       // Local inserido
+                Move 0 to movimentos.quantanterior       // Fixo em 0
+                Move iQuantidade to movimentos.quantatual // Quantidade inserida
+                
+                // Nota: O campo 'numunico' n∆o foi preenchido aqui pois Ç do tipo 
+                // 'serial4' no PostgreSQL e o banco de dados gera o n£mero sozinho.
+                
+                SaveRecord movimentos
+                
+                // Fecha a tela ap¢s concluir as operaá‰es de banco
+                Send Close_Panel
+            End
+            Else Begin
+                Send Info_Box "Preencha todos os campos antes de salvar." "Aviso"
+            End
+        End_Procedure
+    End_Object
+
+    // Bot∆o de Cancelamento
+    Object oCancel_Btn is a Button
+        Set Label to "&Cancelar"
+        Set Location to 115 157
+        Set Size to 14 50
+        Set peAnchors to anBottomRight
+
+        Procedure OnClick
+            Send Close_Panel
+        End_Procedure
+    End_Object
+
+    // 2.3. Mapeamento de Atalhos Globais do Painel (On_Key)
+    On_Key Key_Alt+Key_O Send KeyAction of oOK_Btn
+    On_Key Key_Alt+Key_C Send KeyAction of oCancel_Btn
+
+End_Object

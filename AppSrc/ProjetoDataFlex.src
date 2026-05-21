@@ -1,0 +1,118 @@
+// =============================================================================
+// Sistema de Gest∆o de Estoque
+// M¢dulo Principal / Estrutura do Menu e Janela Principal (Main.src)
+// =============================================================================
+
+// 1. Inclus∆o de Bibliotecas e Pacotes Globais
+Use DFAllEnt.pkg
+Use cCJStandardCommandBarSystem.pkg
+Use oEditContextMenu.pkg
+Use oDEOEditContextMenu17.pkg
+
+// 2. Componentes de Suporte Global
+Object oHtmlHelp is a cHtmlHelp
+End_Object
+
+Object oToolTipController is a cToolTipController
+    Move Self to ghoToolTipController
+End_Object
+
+// 3. Estrutura Base da Aplicaá∆o e Conex∆o com Banco de Dados
+Object oApplication is a cApplication
+    Object oConnection is a cConnection
+        Use LoginEncryption.pkg
+        Use DatabaseLoginDialog.dg
+    End_Object
+End_Object
+
+// 4. Interface Principal do Usu†rio (Panel)
+Object oMain is a Panel
+    Set Label to "Sistema de Gest∆o de Estoque"
+    Set Location to 18 130
+    Set Size to 400 700 
+
+    // 4.1. Sistema de Menus, Barras de Ferramentas e Status (Codejock)
+    Object oCommandBarSystem is a cCJCommandBarSystem
+        Set pbTimerUpdate to True
+        Set peVisualTheme to xtpThemeOffice2013Outlook
+        Set pbAutoResizeIcons to True
+
+        Procedure OnCreateCommandBars
+            Handle hoOptions
+            Get OptionsObject to hoOptions
+            Forward Send OnCreateCommandBars
+        End_Procedure
+   
+        // Menu Principal do Topo
+        Object oMenuBar is a cCJMenuBar
+        End_Object
+
+        // Barra de Ferramentas de Acesso R†pido
+        Object oMainToolBar is a cCJToolbar
+            Set psTitle to "Acesso R†pido"
+            Set pbCloseable to False
+            Set pbCustomizable to False
+            
+            // Bot∆o de Destaque: Produtos
+            Object oProdutosToolItem is a cCJMenuItem
+                Set psCaption to "Acessar Produtos"
+                Set psToolTip to "Acessar M¢dulo de Produtos"
+                
+                Procedure OnExecute Variant vCommandBarControl
+                    Handle hoClient
+                    Get Client_Id to hoClient
+                    Send Activate_oProdutos of hoClient
+                End_Procedure
+            End_Object
+
+            // Bot∆o de Destaque: Estoque
+            Object oEstoqueToolItem is a cCJMenuItem
+                Set psCaption to "Acessar Estoque"
+                Set psToolTip to "Acessar Controle de Estoque"
+                
+                Procedure OnExecute Variant vCommandBarControl
+                    Handle hoClient
+                    Get Client_Id to hoClient
+                    Send Activate_oEstoque of hoClient
+                End_Procedure
+            End_Object
+        End_Object
+        
+        // Barra de Status Inferior
+        Object oStatusBar is a cCJStatusBar
+            
+            Object oStatusPane1 is a cCJStatusBarPane
+                Set piID to sbpIDIdlePane
+                Set pbStyleStretch to True
+            End_Object
+    
+            Object oStatusPane2 is a cCJStatusBarPane
+                Set phoViewPane to Self
+                Set pbStyleStretch to True
+            End_Object
+        End_Object
+    End_Object
+
+    // 5. µrea de Conte£do MDI (Views e Dialogs do Sistema)
+    Object oClientArea is a ClientArea
+        // Telas e Componentes do Sistema (Inclus‰es)
+        Use StdAbout.pkg
+        Use CadastraProduto.vw
+        Use Produtos.vw
+        Use EditaProduto.vw
+        Use ExcluiProduto.dg
+        Use Estoque.vw
+        Use CadastroEstoque.dg
+        Use MovimentacaoDeEstoque.vw
+        Use MovimentaEstoque.dg
+
+        // Procedimento para abertura da tela "Sobre"
+        Procedure Activate_About
+            Send DoAbout "" "" "" "" ""
+        End_Procedure
+    End_Object
+
+End_Object
+
+// 6. Inicializaá∆o da Interface Gr†fica
+Start_UI

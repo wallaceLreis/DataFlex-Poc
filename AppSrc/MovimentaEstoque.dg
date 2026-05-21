@@ -1,0 +1,157 @@
+// =============================================================================
+// MOVIMENTAÄ«O DE ESTOQUE (ENTRADA / SA÷DA)
+// Tela Modal para C†lculo e Ajuste DinÉmico de Saldos (MovimentaEstoque.dg)
+// =============================================================================
+
+// 1. Inclus∆o de Bibliotecas e Pacotes
+Use Windows.pkg
+Use DFClient.pkg
+Use DFEntry.pkg
+
+// 2. Registro de Objetos Externos (Evita erros de compilaá∆o avanáada / Forward Reference)
+Register_Object oEstoque
+
+// 3. Estrutura Principal do Modal (ModalPanel)
+Object oMovimentaEstoque is a ModalPanel
+    Set Label to "Movimentar Estoque"
+    Set Location to 0 0
+    Set Size to 160 211
+    Set piMinSize to 160 211
+    Set Border_Style to Border_Thick
+
+    // Propriedades p£blicas para receber os dados passados pela Grid ancestral
+    Property String psLocalMov ""
+    Property String psCodProdMov ""
+
+    // 3.1. Elementos de Interface Visual (Campos de Entrada / Seleá∆o)
+    
+    // RadioGroup para Seleá∆o do Tipo de Operaá∆o Financeira/F°sica
+    Object oOperacaoRadio is a RadioGroup
+        Set Label to "Tipo de Operaá∆o"
+        Set Location to 10 15
+        Set Size to 45 180
+
+        Object oRadioEntrada is a Radio
+            Set Label to "Entrada (+)"
+            Set Location to 18 20
+            Set Size to 10 60
+        End_Object
+
+        Object oRadioSaida is a Radio
+            Set Label to "Sa°da (-)"
+            Set Location to 18 100
+            Set Size to 10 60
+        End_Object
+    End_Object
+
+    // Campo de Entrada: Quantidade da Movimentaá∆o
+    Object oMovQuantidade is a Form
+        Set Label to "Quantidade:"
+        Set Location to 65 80
+        Set Size to 13 60
+        Set Label_Col_Offset to 5
+        Set Label_Justification_mode to jMode_Right
+    End_Object
+
+    // 3.2. Bot‰es de Interaá∆o e Persistància de Dados
+
+    // Bot∆o de Confirmaá∆o (Processamento do C†lculo e Saldo)
+    Object oOK_Btn is a Button
+        Set Label to "&OK"
+        Set Location to 140 102
+        Set Size to 14 50
+        Set peAnchors to anBottomRight
+
+        // Rotina respons†vel pela busca de saldo, rec†lculo matem†tico e gravaá∆o dupla
+        Procedure OnClick
+            String sLocal sCodProd
+            Integer iQtdMov iOperacao iQtdAnterior iQtdAtual
+            
+            // Recupera o local e produto que foram passados para as propriedades deste painel
+            Get psLocalMov to sLocal
+            Get psCodProdMov to sCodProd
+            
+            // Pega a quantidade digitada e a operaá∆o selecionada (0 = Entrada, 1 = Sa°da)
+            Get Value of oMovQuantidade to iQtdMov
+            Get Current_Radio of oOperacaoRadio to iOperacao
+            
+            // Validaá∆o de consistància b†sica dos dados antes de abrir as tabelas
+            If (sLocal <> "" and sCodProd <> "" and iQtdMov > 0) Begin
+                Open Estoque
+                Open Movimentos
+                
+                // -------------------------------------------------------------
+                // 1. Localiza ou inicializa o registro na tabela Estoque
+                // -------------------------------------------------------------
+                Clear estoque
+                Move sLocal to estoque.local
+                Find eq estoque by Index.1
+                
+                If (Found) Begin
+                    Move estoque.quantidade to iQtdAnterior
+                End
+                Else Begin
+                    // Fallback de seguranáa: inicia zerado caso o registro n∆o exista
+                    Move sLocal to estoque.local
+                    Move sCodProd to estoque.codprod
+                    Move 0 to iQtdAnterior
+                End
+                
+                // -------------------------------------------------------------
+                // 2. Executa a l¢gica aritmÇtica com base no Radio selecionado
+                // -------------------------------------------------------------
+                If (iOperacao = 0) Begin
+                    Move (iQtdAnterior + iQtdMov) to iQtdAtual // Entrada (+)
+                End
+                Else Begin
+                    Move (iQtdAnterior - iQtdMov) to iQtdAtual // Sa°da (-)
+                End
+                
+                // -------------------------------------------------------------
+                // 3. Atualiza o saldo do Estoque principal
+                // -------------------------------------------------------------
+                Move iQtdAtual to estoque.quantidade
+                Move (CurrentDateTime()) to estoque.data_alteracao
+                SaveRecord estoque
+                
+                // -------------------------------------------------------------
+                // 4. Grava a auditoria/hist¢rico na tabela Movimentos
+                // -------------------------------------------------------------
+                Clear movimentos
+                Move sLocal to movimentos.codlocal
+                Move iQtdAnterior to movimentos.quantanterior
+                Move iQtdAtual to movimentos.quantatual
+                Move (CurrentDateTime()) to movimentos.data_inclusao
+                SaveRecord movimentos
+                
+                // -------------------------------------------------------------
+                // 5. Comunicaá∆o Inter-telas: Atualiza a grid do painel chamador
+                // -------------------------------------------------------------
+                Send DoFillGrid of (oGrid2(oEstoque))
+                
+                // Fecha a tela modal
+                Send Close_Panel
+            End
+            Else Begin
+                Send Info_Box "Verifique a quantidade informada ou a seleá∆o do registro." "Aviso"
+            End
+        End_Procedure
+    End_Object
+
+    // Bot∆o de Cancelamento
+    Object oCancel_Btn is a Button
+        Set Label to "&Cancelar"
+        Set Location to 140 157
+        Set Size to 14 50
+        Set peAnchors to anBottomRight
+
+        Procedure OnClick
+            Send Close_Panel
+        End_Procedure
+    End_Object
+
+    // 3.3. Mapeamento de Atalhos Globais do Painel (On_Key)
+    On_Key Key_Alt+Key_O Send KeyAction of oOK_Btn
+    On_Key Key_Alt+Key_C Send KeyAction of oCancel_Btn
+
+End_Object

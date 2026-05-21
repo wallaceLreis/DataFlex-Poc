@@ -1,0 +1,82 @@
+// =============================================================================
+// EXCLUS«O DE PRODUTOS
+// Tela de Confirmaá∆o e Deleá∆o F°sica de Registro (ExcluiProduto.dg)
+// =============================================================================
+
+// 1. Inclus∆o de Bibliotecas e Pacotes
+Use Windows.pkg
+
+// 2. Registro de Objetos Externos (Evita erros de Forward Reference)
+Register_Object oProdutos
+
+// 3. Estrutura Principal do Modal (ModalPanel)
+Object oExcluiProduto is a ModalPanel
+    Set Label to "Excluir Produto"
+    Set Location to 0 0
+    Set Size to 52 196
+    Set piMinSize to 52 196
+    Set Border_Style to Border_Thick
+    
+    // Propriedade p£blica para receber o c¢digo do produto selecionado na Grid
+    Property String psCodProdExcluir ""
+
+    // 3.1. Elementos de Interface Visual (Apenas texto informativo)
+    Object oTextBox1 is a TextBox
+        Set Label to 'Deseja Excluir ?'
+        Set Location to 8 8
+        Set Size to 10 46
+    End_Object
+
+    // 3.2. Bot‰es de Interaá∆o e Aá∆o
+
+    // Bot∆o de Confirmaá∆o (OK)
+    Object oOK_Btn is a Button
+        Set Label    to "&OK"
+        Set Location to 28 41
+        Set Size to 15 50
+        Set peAnchors to anBottomRight
+
+        // Rotina respons†vel por localizar e deletar o registro diretamente no banco
+        Procedure OnClick
+            String sCodProd
+            
+            // Recupera o c¢digo armazenado na propriedade do Modal
+            Get psCodProdExcluir to sCodProd
+            
+            If (sCodProd <> "") Begin
+                Open Produtos
+                Clear produtos
+                Move sCodProd to produtos.codprod
+                Find eq produtos by Index.1
+                
+                // Se encontrou o registro, executa a deleá∆o f°sica
+                If (Found) Begin
+                    Delete produtos
+                    
+                    // Dispara a atualizaá∆o atravÇs do mÇtodo p£blico da View principal
+                    Send AtualizaGrid of oProdutos
+                End
+            End
+            
+            // Fecha o modal ap¢s a operaá∆o
+            Send Close_Panel
+        End_Procedure
+    End_Object
+
+    // Bot∆o de Cancelamento (Cancel)
+    Object oCancel_Btn is a Button
+        Set Label    to "&Cancelar"
+        Set Location to 28 101
+        Set Size to 15 50
+        Set peAnchors to anBottomRight
+
+        Procedure OnClick
+            Send Close_Panel
+        End_Procedure
+    End_Object
+
+    // 3.3. Mapeamento de Atalhos Globais do Painel (On_Key)
+    On_Key Key_Alt+Key_O Send KeyAction of oOK_Btn
+    On_Key Key_Alt+Key_C Send KeyAction of oCancel_Btn
+
+End_Object
